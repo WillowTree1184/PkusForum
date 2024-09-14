@@ -1,0 +1,21 @@
+﻿<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+            <NotAuthorized>
+                <PkusForum.Pages.AccountRelated.RedirectToSignIn></PkusForum.Pages.AccountRelated.RedirectToSignIn>
+            </NotAuthorized>
+            
+        </AuthorizeRouteView>
+    </Found>
+    <NotFound>
+        <PageTitle>不存在的路由页面</PageTitle>
+        <LayoutView Layout="@typeof(TopbarLayout)">
+            <div class="full-height flex center">
+                <div>
+                    <h2>路由错误</h2>
+                    <p>你正在试图访问 Pkuhs Forum 上不存在的页面，但是它不存在</p>
+                </div>
+            </div>
+        </LayoutView>
+    </NotFound>
+</Router>

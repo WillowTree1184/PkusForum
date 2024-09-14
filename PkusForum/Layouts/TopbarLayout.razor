@@ -1,0 +1,28 @@
+﻿@inherits LayoutComponentBase
+
+<main class="with-topbar animation-fade">
+    <topbar>
+        <b class="nowap">Pkus Forum</b>
+        <div class="flex gap">
+            <a class="nowap" @onclick=@(() => navigation.NavigateTo("/article"))>贴吧</a>
+            <a class="nowap" @onclick=@(() => navigation.NavigateTo("/blog"))>博客</a>
+            <a class="nowap ellipsis" style="max-width: 150px" @onclick=@(() => navigation.NavigateTo($"/user/{account.AccountId}"))>@(account.UserName)</a>
+        </div>
+    </topbar>
+    <div>
+        @Body
+        <br />
+        <br />
+    </div>
+</main>
+
+@code {
+    Account account;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitializedAsync();
+
+        account = await authService.GetTokenAsync();
+    }
+}

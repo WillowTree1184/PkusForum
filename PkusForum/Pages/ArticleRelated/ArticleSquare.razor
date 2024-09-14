@@ -1,0 +1,42 @@
+﻿@page "/article"
+@attribute [Authorize]
+@layout TopbarLayout
+
+<PageTitle>贴吧</PageTitle>
+
+<div class="animation-up">
+    <div class="flex align-baseline justify-between">
+        <h1>贴吧</h1>
+        <button @onclick=@(() => navigation.NavigateTo("/article/editor"))>+ 撰写</button>
+    </div>
+
+    <div class="flex column gap">
+        <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items=articles Context=item>
+            <div class="flex column card compact gap hover-cursor-pointer" @onclick=@(() => navigation.NavigateTo($"/article/{item.ArticleId}"))>
+                <div>
+                    <h2 class="text-wrap-ellipsis">@(item.Title)</h2>
+                    <AccountTag AccountId=@(item.OwnerAccountId) Date=@(item.PublicDate) AllowRedirect=false></AccountTag>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(item.Body))
+                {
+                    <p class="text-word-break">@(item.Body)</p>
+                }
+            </div>
+        </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
+    </div>
+    <div class="flex justify-center">
+        <p>——&nbsp;&nbsp;&nbsp;&nbsp;以上为所有帖子&nbsp;&nbsp;&nbsp;&nbsp;——</p>
+    </div>
+</div>
+
+@code {
+    List<Article> articles;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        articles = Database.ArticleRepository.Select.ToList();
+        articles.Reverse();
+    }
+}

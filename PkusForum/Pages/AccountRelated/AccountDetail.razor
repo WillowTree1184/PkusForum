@@ -1,0 +1,67 @@
+﻿@page "/user/{targetAccountId}"
+@attribute [Authorize]
+@layout TopbarLayout
+
+<PageTitle>@(targetAccount?.UserName) 的个人主页</PageTitle>
+
+<div class="animation-up">
+    @if (isLoaded)
+    {
+        <div class="full-width flex align-center justify-between gap">
+            <div class="flex column compact">
+                <h1>@(targetAccount.UserName)</h1>
+                <p class="text-word-break">@(string.IsNullOrWhiteSpace(targetAccount.SelfIntroduction) ? "这位同学还没有做自我介绍" : targetAccount.SelfIntroduction)</p>
+                <cap>UID: @(targetAccount.AccountId)</cap>
+            </div>
+            @if (isOwner == true)
+            {
+                <button @onclick=@(() => navigation.NavigateTo("/setting"))>设置 &rarr;</button>
+            }
+        </div>
+        <br />
+        <br />
+        <br />
+        <div class="flex column gap">
+            <h2 class="compact">发布的帖子</h2>
+            <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items=articles Context=item>
+                <div class="flex column card compact gap hover-cursor-pointer" @onclick=@(() => navigation.NavigateTo($"/article/{item.ArticleId}"))>
+                    <div>
+                        <h2 class="text-wrap-ellipsis">@(item.Title)</h2>
+                        <AccountTag AccountId=@(item.OwnerAccountId) Date=@(item.PublicDate)></AccountTag>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(item.Body))
+                    {
+                        <p class="text-word-break">@(item.Body)</p>
+                    }
+                </div>
+            </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string targetAccountId { get; set; }
+    Account targetAccount;
+    List<Article> articles;
+    bool isOwner = false;
+    bool isLoaded = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+
+        Account account = await authService.GetTokenAsync();
+
+        if (AccountManager.TryGetAccountById(targetAccountId, out targetAccount))
+        {
+            articles = Database.ArticleRepository.Select.Where(target => target.OwnerAccountId == targetAccount.AccountId).ToList();
+            isOwner = targetAccount.AccountId == account.AccountId;
+            isLoaded = true;
+        }
+        else
+        {
+            navigation.NavigateTo($"/user/{account.AccountId}", false, true);
+            return;
+        }
+    }
+}

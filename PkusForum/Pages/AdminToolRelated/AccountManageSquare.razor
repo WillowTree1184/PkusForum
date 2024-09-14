@@ -1,0 +1,53 @@
+﻿@page "/admin/account"
+@attribute [Authorize]
+@layout TopbarLayout
+
+<PageTitle>账户列表</PageTitle>
+
+<div class="animation-up">
+    @if (account.UserPermission == Account.Permission.Admin)
+    {
+        <div class="full-width flex align-center justify-between gap">
+            <h1>账户列表</h1>
+            <button @onclick=@(() => navigation.NavigateTo("/admin/account-register"))>批量注册 &rarr;</button>
+        </div>
+        <table class="full-width">
+            <thead>
+                <tr>
+                    <td width="1">AID</td>
+                    <td width="2">用户名</td>
+                    <td width="5">简介</td>
+                    <td width="1">权限</td>
+                </tr>
+            </thead>
+            <tbody>
+                <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items=accountList Context=item>
+                    <tr @onclick=@(() => navigation.NavigateTo($"/admin/account/{item.AccountId}"))>
+                        <td>@(item.AccountId)</td>
+                        <td>@(item.UserName)</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.SelfIntroduction) ? "这位同学还没有做自我介绍" : item.SelfIntroduction)</td>
+                        <td>@(item.UserPermission.ToString())</td>
+                    </tr>
+                </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    Account account;
+    List<Account> accountList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnParametersSet();
+
+        account = await authService.GetTokenAsync();
+        if (account.UserPermission != Account.Permission.Admin)
+        {
+            navigation.NavigateTo("/");
+        }
+
+        accountList = Database.AccountRepository.Select.ToList();
+    }
+}

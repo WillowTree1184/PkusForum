@@ -1,0 +1,31 @@
+﻿<div class="flex column compact hover-cursor-pointer" @onclick=@(() => RedirectToTargetAccountPage())>
+    <p>@(userName)</p>
+    <cap>@(Date)</cap>
+</div>
+
+@code
+{
+    [Parameter, EditorRequired] public string AccountId { get; set; }
+    [Parameter] public DateTime? Date { get; set; }
+    [Parameter] public bool AllowRedirect { get; set; } = true;
+
+    string? userName = "不存在的用户";
+
+    protected override void OnInitialized()
+    {
+        if (!AccountManager.TryGetAccountById(AccountId, out Account? account))
+        {
+            return;
+        }
+
+        userName = account.UserName;
+    }
+
+    void RedirectToTargetAccountPage()
+    {
+        if (AllowRedirect)
+        {
+            navigation.NavigateTo($"/user/{AccountId}");
+        }
+    }
+}

@@ -1,0 +1,18 @@
+﻿@page "/"
+@attribute [Authorize]
+@layout TopbarLayout
+
+<PageTitle>主页</PageTitle>
+
+<div class="full-height flex column center compact gap animation-fade">
+    <h2>欢迎来到 Pkus Forum</h2>
+    <p class="animation-fade" style="--animation-delay: 0.25s">由北大附中海口学校学生自组织开发的学术论坛</p>
+</div>
+
+<style scoped>
+    body {
+        background: rgba(50, 50, 50, 0.8) url(/image/background.png) center;
+        background-size: cover;
+        background-blend-mode: multiply;
+    }
+</style>

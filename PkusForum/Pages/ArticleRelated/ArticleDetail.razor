@@ -1,0 +1,93 @@
+﻿@page "/article/{targetArticleId:long}"
+@attribute [Authorize]
+@layout TopbarLayout
+
+<PageTitle>贴吧 - @(targetArticle.Title)</PageTitle>
+
+<div class="animation-left-in">
+    <div class="flex justify-between">
+        <h1 class="text-wrap-ellipsis"><a @onclick=@(() => navigation.NavigateTo("/article"))>&larr;</a>&nbsp;&nbsp;&nbsp;@(targetArticle.Title)</h1>
+    </div>
+
+    <div class="flex column compact gap">
+        <AccountTag AccountId=@(targetArticle.OwnerAccountId) Date=@(targetArticle.PublicDate)></AccountTag>
+        @if (!string.IsNullOrWhiteSpace(targetArticle.Body))
+        {
+            <p class="text-word-break">@(targetArticle.Body)</p>
+        }
+    </div>
+
+    <br />
+
+    <div class="flex column gap">
+        <textarea placeholder="回复" rows="8" maxlength="1000" @bind=replyBody></textarea>
+        <div class="flex justify-between gap">
+            <b class="danger">@(replyError)</b>
+            <button @onclick=@(() => PublishReply())>发布回复</button>
+        </div>
+    </div>
+    
+    <div class="flex column gap">
+        <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items=bindReplys Context=item>
+            <div class="flex column card compact gap">
+                <AccountTag AccountId=@(item.OwnerAccountId) Date=@(item.PublicDate)></AccountTag>
+                <p class="text-word-break">@(item.Body)</p>
+            </div>
+        </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
+    </div>
+    <div class="flex justify-center">
+        <p>——&nbsp;&nbsp;&nbsp;&nbsp;以上为所有回复&nbsp;&nbsp;&nbsp;&nbsp;——</p>
+    </div>
+</div>
+
+@code {
+    [Parameter] public long targetArticleId { get; set; }
+    Article targetArticle;
+    List<Reply> bindReplys;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        targetArticle = Database.ArticleRepository.Select.Where(target => target.ArticleId == targetArticleId).First();
+
+        bindReplys = Database.ReplyRepository.Select.Where(target => target.BindTarget == Reply.ReplyTarget.Article && target.BindId == targetArticleId).ToList();
+        bindReplys.Reverse();
+    }
+
+    public string? replyError = null, replyBody;
+
+    async void PublishReply()
+    {
+        replyError = null;
+
+        if (string.IsNullOrWhiteSpace(replyBody))
+        {
+            replyError = "请填写必填字段";
+            return;
+        }
+
+        if (replyBody.Length < 5)
+        {
+            replyError = "回复正文至少 5 个字";
+            return;
+        }
+
+        Account? account = await authService.GetTokenAsync();
+        if (account == null)
+        {
+            return;
+        }
+
+        ReplyManager.PublishReply(new Reply()
+        {
+            BindTarget = Reply.ReplyTarget.Article,
+            BindId = targetArticleId,
+            OwnerAccountId = account.AccountId,
+            Body = replyBody.Trim(),
+            PublicDate = DateTime.Now
+        });
+
+        navigation.NavigateTo($"/article/{targetArticleId}", true);
+    }
+}

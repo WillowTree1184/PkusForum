@@ -1,0 +1,93 @@
+﻿@page "/admin/account-register"
+@attribute [Authorize]
+@layout TopbarLayout
+
+<PageTitle>批量注册账户</PageTitle>
+
+<div class="animation-up">
+    @if (account.UserPermission == Account.Permission.Admin)
+    {
+        <h1><a @onclick=@(() => navigation.NavigateTo("/admin/account"))>&larr;</a>&nbsp;&nbsp;&nbsp;批量注册</h1>
+        <div class="flex column gap">
+            <textarea placeholder="用换行分割每个新用户的 AID" rows="15" @bind=newAccountAIDs></textarea>
+            @if (error != null)
+            {
+                <p class="danger">@(error)</p>
+            }
+            <div>
+                <button @ondblclick=@(() => BatchRegistration())>注册</button>
+            </div>
+        </div>
+        <h2>如何使用？</h2>
+        <ul>
+            <li>输入每个新用户的 AID（一般是学生号或 t + 职工号），用换行分隔开。我们会自动删除每个 AID 前后的空格</li>
+            <li>双击注册按钮（似乎手机端因为不可避免的触控问题不可用）以进行注册</li>
+            <li>新用户默认密码为 Welcome + AID，最多 16 位</li>
+            <li>批量注册后，注册失败的 AID 会留在输入框内，成功的被删除。</li>
+        </ul>
+    }
+</div>
+
+@code {
+    Account account;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnParametersSet();
+
+        account = await authService.GetTokenAsync();
+        if (account.UserPermission != Account.Permission.Admin)
+        {
+            navigation.NavigateTo("/");
+        }
+    }
+
+    string? newAccountAIDs, error = null;
+    List<Account> newAccounts;
+
+    void BatchRegistration()
+    {
+        error = null;
+        if (string.IsNullOrWhiteSpace(newAccountAIDs))
+        {
+            error = "请输入必填字段";
+            return;
+        }
+        List<string> AIDList = newAccountAIDs.Split("\n").Distinct().ToList();
+
+        for (int i = 0; i < AIDList.Count; i ++)
+        {
+            string item = AIDList[i].Trim();
+
+            string userName = $"用户 {Sha256Calculator.GetSha256Value(item)}";
+            string password = $"Welcome{item}";
+            AccountManager.AccountRegistResult result = AccountManager.TryRegist(new Account()
+            {
+                AccountId = item,
+                UserName = userName.Substring(0, userName.Length > 20 ? 20 : userName.Length),
+                SelfIntroduction = null,
+                PasswordHash = Sha256Calculator.GetSha256Value(password.Substring(0, password.Length > 16 ? 16 : password.Length)),
+                UserPermission = Account.Permission.User
+            });
+
+            if (result == AccountManager.AccountRegistResult.Success)
+            {
+                AIDList.Remove(item);
+            }
+        }
+
+        if (AIDList.Count > 0)
+        {
+            error = "有部分 AID 注册失败";
+        }
+
+        StringBuilder serialisedFailedContentBuilder = new StringBuilder();
+        for (int i = 0; i < AIDList.Count; i++)
+        {
+            string item = AIDList[i].Trim();
+            serialisedFailedContentBuilder.AppendLine(item);
+        }
+        newAccountAIDs = serialisedFailedContentBuilder.ToString();
+    }
+}
+

@@ -1,0 +1,76 @@
+﻿@page "/admin/account/{targetAccountId}"
+@attribute [Authorize]
+@layout TopbarLayout
+
+<PageTitle>管理员专用账户管理工具</PageTitle>
+
+<div class="animation-up">
+    @if (account.UserPermission == Account.Permission.Admin)
+    {
+        <h1><a @onclick=@(() => navigation.NavigateTo("/admin/account"))>&larr;</a>&nbsp;&nbsp;&nbsp;管理员专用账户管理工具</h1>
+        <div>
+            <b>用户名：@(targetAccount.UserName)</b>
+            <p>简介：@(targetAccount.SelfIntroduction)</p>
+            <p>权限：@(targetAccount.UserPermission.ToString())</p>
+            <cap>AID：@(targetAccount.AccountId)</cap>
+        </div>
+        <h2>账户操作</h2>
+        <div class="compact">
+            <div class="flex align-baseline gap">
+                <button @ondblclick="ResetPassword">双击以重置密码</button>
+                <p class="seletable">@(newPassword != null ? $"成功！密码为 {newPassword}" : "")</p>
+            </div>
+            <br />
+            <div>
+                <button @onclick=@(() => ChangeUserPermission())>设置为 @(targetAccount.UserPermission == Account.Permission.User ? "Admin" : "User")</button>
+            </div>
+            <br />
+            <div class="flex align-baseline gap">
+                <a class="danger" @ondblclick="Deregister">双击以注销</a>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string targetAccountId { get; set; }
+
+    Account account;
+    Account targetAccount;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+
+        account = await authService.GetTokenAsync();
+        if (account.UserPermission != Account.Permission.Admin || !AccountManager.TryGetAccountById(targetAccountId, out targetAccount))
+        {
+            navigation.NavigateTo("/");
+        }
+    }
+
+    string? newPassword;
+
+    void ResetPassword()
+    {
+        string password = $"Welcome{targetAccount.AccountId}";
+        password = password.Substring(0, password.Length > 16 ? 16 : password.Length);
+        targetAccount.PasswordHash = Sha256Calculator.GetSha256Value(password);
+        Database.AccountRepository.Update(targetAccount);
+
+        newPassword = password;
+    }
+
+    async Task Deregister()
+    {
+        AccountManager.Deregister(targetAccount);
+        await Task.Delay(1);
+        navigation.NavigateTo("/admin/account");
+    }
+
+    void ChangeUserPermission()
+    {
+        targetAccount.UserPermission = targetAccount.UserPermission == Account.Permission.User ? Account.Permission.Admin : Account.Permission.User;
+        Database.AccountRepository.Update(targetAccount);
+    }
+}

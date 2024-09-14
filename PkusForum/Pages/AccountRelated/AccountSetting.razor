@@ -1,0 +1,186 @@
+﻿@page "/setting"
+@attribute [Authorize]
+@layout TopbarLayout
+
+<PageTitle>账户设置</PageTitle>
+
+<div class="animation-up">
+    <h1>账户设置</h1>
+    <div class="flex column compact">
+        <h2>基本信息</h2>
+        <table class="full-width">
+            <tbody>
+                <tr>
+                    <td>
+                        <b class="nowap">用户名</b>
+                    </td>
+                    <td class="full-width">
+                        <input placeholder="用户名" maxlength="20" class="full-width" @bind=newUserName />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b class="nowap">简介</b>
+                    </td>
+                    <td class="full-width">
+                        <input placeholder="这位同学还没有做自我介绍" maxlength="100" class="full-width" @bind=newSelfIntroduction />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b class="nowap">AID</b>
+                    </td>
+                    <td class="full-width">
+                        @(account.AccountId)
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="flex align-baseline gap">
+            <button @onclick=@(() => UpdateBasicInformation())>保存更改</button>
+            <p class="@(basicInformationUpdateError != "" ? "danger" : "")">@(basicInformationUpdateError == "" ? "修改成功！" : basicInformationUpdateError)</p>
+        </div>
+    </div>
+    <br />
+    <br />
+    <div class="flex column compact">
+        <h2>密码设置</h2>
+        <table class="full-width">
+            <tbody>
+                <tr>
+                    <td>
+                        <b class="nowap">旧密码</b>
+                    </td>
+                    <td class="full-width">
+                        <input type="password" placeholder="旧密码" maxlength="16" class="full-width" @bind=oldPassword />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b class="nowap">新密码</b>
+                    </td>
+                    <td class="full-width">
+                        <input type="password" placeholder="新密码" maxlength="16" class="full-width" @bind=newPassword />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <b class="nowap">重复</b>
+                    </td>
+                    <td class="full-width">
+                        <input type="password" placeholder="重复新密码" maxlength="16" class="full-width" @bind=reNewPassword />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="flex align-baseline gap">
+            <button @onclick=@(() => UpdatePassword())>确认修改</button>
+            <p class="@(passwordUpdateError != "" ? "danger" : "")">@(passwordUpdateError == "" ? "修改成功！" : passwordUpdateError)</p>
+        </div>
+    </div>
+    <br />
+    <br />
+    <div class="flex column compact gap">
+        <h2>其它</h2>
+        <div>
+            <button @onclick=@(() => authService.Logout())>登出 &rarr;</button>
+        </div>
+    </div>
+    @if (account.UserPermission == Account.Permission.Admin)
+    {
+        <br />
+        <br />
+        <div class="flex column compact gap">
+            <h2>管理员工具</h2>
+            <div>
+                <button @onclick=@(() => navigation.NavigateTo("/admin/account"))>账户管理工具 &rarr;</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    Account account;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+
+        account = await authService.GetTokenAsync();
+        newUserName = account.UserName;
+        newSelfIntroduction = account.SelfIntroduction;
+    }
+
+    string? basicInformationUpdateError = null, newUserName, newSelfIntroduction;
+
+    async void UpdateBasicInformation()
+    {
+        basicInformationUpdateError = null;
+
+        if (string.IsNullOrWhiteSpace(newUserName))
+        {
+            basicInformationUpdateError = "用户名不能为空";
+            return;
+        }
+
+        if (newUserName != account.UserName && AccountManager.CheckUserNameRepeat(newUserName))
+        {
+            basicInformationUpdateError = "用户名重复";
+            return;
+        }
+
+        Account updatedAccount = await authService.GetTokenAsync();
+        updatedAccount.UserName = newUserName.Trim();
+        if (!string.IsNullOrWhiteSpace(newSelfIntroduction))
+        {
+            updatedAccount.SelfIntroduction = newSelfIntroduction.Trim();
+        }
+        else
+        {
+            updatedAccount.SelfIntroduction = null;
+        }
+        Database.AccountRepository.Update(updatedAccount);
+
+        account.UserName = updatedAccount.UserName;
+        account.SelfIntroduction = updatedAccount.SelfIntroduction;
+        basicInformationUpdateError = "";
+    }
+
+    string? passwordUpdateError = null, oldPassword, newPassword, reNewPassword;
+
+    async void UpdatePassword()
+    {
+        passwordUpdateError = null;
+
+        if (string.IsNullOrWhiteSpace(oldPassword) || string.IsNullOrWhiteSpace(newPassword) || string.IsNullOrWhiteSpace(reNewPassword))
+        {
+            passwordUpdateError = "请填写必填字段";
+            return;
+        }
+        if (Sha256Calculator.GetSha256Value(oldPassword) != account.PasswordHash)
+        {
+            passwordUpdateError = "旧密码错误";
+            return;
+        }
+        if (newPassword.Length < 6 || newPassword != newPassword.Replace(" ", ""))
+        {
+            passwordUpdateError = "新密码应为 6 - 16 位无空格字符串";
+            return;
+        }
+        if (reNewPassword != newPassword)
+        {
+            passwordUpdateError = "重复的密码与新密码不一致";
+            return;
+        }
+
+        Account updatedAccount = await authService.GetTokenAsync();
+        updatedAccount.PasswordHash = Sha256Calculator.GetSha256Value(newPassword);
+        Database.AccountRepository.Update(updatedAccount);
+
+        account.PasswordHash = updatedAccount.PasswordHash;
+        oldPassword = null;
+        newPassword = null;
+        reNewPassword = null;
+        passwordUpdateError = "";
+    }
+}

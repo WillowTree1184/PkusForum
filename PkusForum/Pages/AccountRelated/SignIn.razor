@@ -1,0 +1,48 @@
+﻿@page "/signin"
+
+<div class="full-height flex center">
+    <div class="dialog compact flex column gap" @onkeypress=CatchKeyPress>
+        <h2>登录</h2>
+        <input placeholder="用户名 / 学生号" maxlength="20" class="full-width" @bind=token @bind:event=oninput />
+        <input type="password" placeholder="密码" maxlength="16" class="full-width" @bind=password @bind:event=oninput />
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <p class="danger">@(errorMessage)</p>
+        }
+        <div>
+            <button @onclick=@(() => Authentication())>登录 &rarr;</button>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    string? errorMessage = null, token = null, password = null;
+
+    void CatchKeyPress(KeyboardEventArgs eventArgs)
+    {
+        if (eventArgs.Key == "Enter")
+        {
+            Authentication();
+        }
+    }
+
+    void Authentication()
+    {
+        errorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(password))
+        {
+            errorMessage = "请填写必填字段";
+            return;
+        }
+
+        if (!AccountManager.TryMatchAccount(token, Sha256Calculator.GetSha256Value(password), out string? accountId))
+        {
+            errorMessage = "用户名或密码错误";
+            return;
+        }
+
+        authService.Login(accountId);
+    }
+}

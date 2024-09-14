@@ -1,0 +1,58 @@
+﻿@page "/article/editor"
+@attribute [Authorize]
+@layout TopbarLayout
+
+<PageTitle>发布帖子</PageTitle>
+
+<div class="full-height flex center animation-fade">
+    <div class="large-dialog flex column compact gap">
+        <h2>发布新帖</h2>
+        <input placeholder="标题*" maxlength="100" class="full-width" @bind=title />
+        <textarea placeholder="正文（非必要，如有正文字数至少 5 个字）" rows="8" maxlength="1000" class="full-width" @bind=body></textarea>
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <b class="danger">@(error)</b>
+        }
+        <div class="flex justify-between">
+            <a @onclick=@(() => navigation.NavigateTo("/article"))>返回</a>
+            <button @onclick=@(() => PublishArticle())>发布 &rarr;</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    string? error = null, title, body;
+
+    async void PublishArticle()
+    {
+        error = null;
+
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            error = "请填写必填字段";
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(body) && body.Length < 5)
+        {
+            error = "帖子如有正文至少 5 个字";
+            return;
+        }
+
+        Account? account = await authService.GetTokenAsync();
+        if (account == null)
+        {
+            return;
+        }
+
+        ArticleManager.PublishArticle(new Article()
+        {
+            OwnerAccountId = account.AccountId,
+            Title = title.Trim(),
+            Body = body?.Trim(),
+            FollowedAccountIds = new List<string>(),
+            PublicDate = DateTime.Now
+        });
+        navigation.NavigateTo("/article");
+    }
+}
