@@ -6,8 +6,6 @@ using PkusForum.Services.DatabaseService;
 using PkusForum.Services.DatabaseService.Managers;
 using PkusForum.Services.DatabaseService.TableStruct;
 
-string webUrl = "https://192.168.2.6:7782";
-
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
@@ -25,6 +23,15 @@ AccountManager.TryRegist(new Account()
     PasswordHash = Sha256Calculator.GetSha256Value("pfadmin176"),
     UserName = "PkusForum 官方",
     SelfIntroduction = "这里是 PkusForum 官方账号，联系我们、合作或 Bug 反馈请到 QQ 群 922510834",
+    UserPermission = Account.Permission.Admin
+});
+
+AccountManager.TryRegist(new Account()
+{
+    AccountId = "pkus",
+    PasswordHash = Sha256Calculator.GetSha256Value("pkusoff001"),
+    UserName = "北大附中海口学校官方",
+    SelfIntroduction = "从小到大，读北大",
     UserPermission = Account.Permission.Admin
 });
 
@@ -49,4 +56,4 @@ app.MapControllers();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.Run(webUrl);
+app.Run();
