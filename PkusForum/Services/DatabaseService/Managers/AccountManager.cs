@@ -13,7 +13,7 @@ namespace PkusForum.Services.DatabaseService.Managers
         {
             accountId = null;
 
-            List<Account> selected = Database.AccountRepository.Select.Where(target => target.AccountId == token || target.UserName == token).ToList();
+            List<Account> selected = Database.AccountRepository.Select.Where(target => (target.AccountId == token || target.UserName == token) && target.PasswordHash == passwordHash).ToList();
             if (selected.Count <= 0)
             {
                 return false;
