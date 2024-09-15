@@ -83,6 +83,9 @@
     <div class="flex column compact gap">
         <h2>其它</h2>
         <div>
+            <button @onclick=@(() => navigation.NavigateTo("https://github.com/WillowTree1184/PkusForum"))>在 Github 上访问源代码 &rarr;</button>
+        </div>
+        <div>
             <button @onclick=@(() => authService.Logout())>登出 &rarr;</button>
         </div>
     </div>
