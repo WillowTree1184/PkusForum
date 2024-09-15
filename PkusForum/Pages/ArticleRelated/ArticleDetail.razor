@@ -13,7 +13,7 @@
         <AccountTag AccountId=@(targetArticle.OwnerAccountId) Date=@(targetArticle.PublicDate)></AccountTag>
         @if (!string.IsNullOrWhiteSpace(targetArticle.Body))
         {
-            <p class="text-word-break">@(targetArticle.Body)</p>
+            <p class="text-word-break seletable">@(targetArticle.Body)</p>
         }
     </div>
 
@@ -31,7 +31,7 @@
         <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items=bindReplys Context=item>
             <div class="flex column card compact gap">
                 <AccountTag AccountId=@(item.OwnerAccountId) Date=@(item.PublicDate)></AccountTag>
-                <p class="text-word-break">@(item.Body)</p>
+                <p class="text-word-break seletable">@(item.Body)</p>
             </div>
         </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
     </div>
