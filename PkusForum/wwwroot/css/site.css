@@ -180,7 +180,7 @@ table {
 }
 
 /*class*/
-.seletable {
+.seletable, .seletable * {
     -webkit-user-select: text;
     -moz-user-select: text;
     user-select: text;
