@@ -1,6 +1,6 @@
 # PkusForum
 
-北大附中海口学校校园论坛
+北大附中海口学校校园论坛 [forum.tnorv.cn](http://forum.tnorv.cn/)
 
 PkusForum 的前身是 “北大附中海口墙”，因其后来被封号不能用，故有同学找我希望将其做成网页版本，于是便有了 PkusForum。
 
