@@ -5,7 +5,13 @@
 <PageTitle>贴吧 - @(targetArticle.Title)</PageTitle>
 
 <div class="animation-left-in">
-    <h1 class="text-wrap-ellipsis"><a @onclick=@(() => navigation.NavigateTo("/article"))>&larr;</a>&nbsp;&nbsp;&nbsp;@(targetArticle.Title)</h1>
+    <div class="flex align-baseline justify-between gap">
+        <h1 class="text-wrap-ellipsis"><a @onclick=@(() => navigation.NavigateTo(fromUrl))>&larr;</a>&nbsp;&nbsp;&nbsp;@(targetArticle.Title)</h1>
+        @if (targetArticle.OwnerAccountId == account.AccountId)
+        {
+            <a class="danger nowap" @onclick=@(() => DeleteArticle())>删除帖子</a>
+        }
+    </div>
 
     <div class="flex column compact gap">
         <AccountTag AccountId=@(targetArticle.OwnerAccountId) Date=@(targetArticle.PublicDate)></AccountTag>
@@ -40,14 +46,25 @@
 
 @code {
     [Parameter] public long targetArticleId { get; set; }
+    [Parameter, SupplyParameterFromQuery] public string? fromUrl { get; set; }
+    Account account;
     Article targetArticle;
     List<Reply> bindReplys;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         base.OnParametersSet();
 
-        targetArticle = Database.ArticleRepository.Select.Where(target => target.ArticleId == targetArticleId).First();
+        if (fromUrl == null)
+        {
+            fromUrl = "/article";
+        }
+        account = await authService.GetTokenAsync();
+        if (!ArticleManager.GetArticleById(targetArticleId, out targetArticle))
+        {
+            navigation.NavigateTo(fromUrl);
+            return;
+        }
 
         bindReplys = Database.ReplyRepository.Select.Where(target => target.BindTarget == Reply.ReplyTarget.Article && target.BindId == targetArticleId).ToList();
         bindReplys.Reverse();
@@ -71,7 +88,6 @@
             return;
         }
 
-        Account? account = await authService.GetTokenAsync();
         if (account == null)
         {
             return;
@@ -86,6 +102,19 @@
             PublicDate = DateTime.Now
         });
 
-        navigation.NavigateTo($"/article/{targetArticleId}", true);
+        navigation.NavigateTo(navigation.GetUriWithQueryParameters($"/article/{targetArticleId}", new Dictionary<string, object?>()
+        {
+            {
+                "fromUrl",
+                fromUrl
+            }
+        }), true);
+    }
+
+    void DeleteArticle()
+    {
+        ArticleManager.RemoveArticle(targetArticle);
+
+        navigation.NavigateTo(fromUrl);
     }
 }

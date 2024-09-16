@@ -24,7 +24,12 @@
         <div class="flex column gap">
             <h2 class="compact">发布的帖子</h2>
             <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items=articles Context=item>
-                <div class="flex column card compact gap hover-cursor-pointer" @onclick=@(() => navigation.NavigateTo($"/article/{item.ArticleId}"))>
+                <div class="flex column card compact gap hover-cursor-pointer" @onclick=@(() => navigation.NavigateTo(navigation.GetUriWithQueryParameters($"/article/{item.ArticleId}", new Dictionary<string, object?>() {
+                    {
+                        "fromUrl",
+                        $"/user/{targetAccountId}"
+                    }
+                })))>
                     <div>
                         <h2 class="text-wrap-ellipsis">@(item.Title)</h2>
                         <AccountTag AccountId=@(item.OwnerAccountId) Date=@(item.PublicDate)></AccountTag>
