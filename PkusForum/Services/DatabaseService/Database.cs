@@ -9,7 +9,7 @@ namespace PkusForum.Services.DatabaseService
         static Lazy<IFreeSql> sqliteLazy = new Lazy<IFreeSql>(() =>
         {
             IFreeSql freeSql = new FreeSql.FreeSqlBuilder()
-                .UseConnectionString(FreeSql.DataType.Sqlite, @"Data Source=Database.db")
+                .UseConnectionString(FreeSql.DataType.Sqlite, @"Data Source=../Database.db")
                 .UseAutoSyncStructure(true)
                 .Build();
             return freeSql;
