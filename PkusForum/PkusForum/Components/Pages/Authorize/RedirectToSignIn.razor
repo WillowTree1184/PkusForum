@@ -1,0 +1,8 @@
+﻿@code {
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        navigation.NavigateTo("/auth/signin", true, true);
+    }
+}
