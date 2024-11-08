@@ -18,6 +18,11 @@ PkusForum 的前身是 “北大附中海口墙”，因其后来被封号不能
 |模板|Blazor Web App|
 |创建时附加|自动的渲染方式(Server和WebAssembly)，配置HTTPS|
 
+本项目有使用以下 `Nuget` 程序包:
+- FreeSQL
+- FreeSQL.sqlite
+- Microsoft.AspNetCore.Authorization
+
 ## 账户系统说明
 本项目默认为 “PkusForum官方” 和 “北大附中海口学校官方” 创建具有管理员权限账号，其 `AID` 分别为 “admin” 和 “pkus”。
 
